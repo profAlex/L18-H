@@ -1,0 +1,7 @@
+1. security отдельным модулем красиво делать? не лучше ли их запихнуть в authorisation особенно если они ходят в один репозиторий? Насколько это допустимо с архитектурной точки зрения?
+
+2. что может быть лучше 
+expiresAt: expiresAt,
+                // expiresAt: { $gt: new Date() },
+                
+внутри async checkIfSessionExists в файле sessions.query-repository.ts
