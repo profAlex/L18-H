@@ -45,7 +45,7 @@ export class SQLUserSession {
     /**
      * Маппинг из сырых данных PostgreSQL (SQL query) в объект домена
      */
-    static reconstruct(rawDataFromDb: any): SQLUserSession {
+    static reconstructInstance(rawDataFromDb: any): SQLUserSession {
         const session = new SQLUserSession();
 
         session.id = rawDataFromDb.id;

@@ -1,5 +1,5 @@
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto } from '../../api/view-dto/blogs.view-dto';
+import { BlogViewDto, SQLBlogViewDto } from '../../api/view-dto/blogs.view-dto';
 import { Blog, BlogDocument, BlogModelType } from '../../domain/blog.entity';
 // import {FilterQuery, ObjectId} from "mongoose";
 // import { type FilterQuery } from 'mongoose';
@@ -9,10 +9,21 @@ import { InjectModel } from '@nestjs/mongoose';
 import { SortDirection } from '../../../../../core/dto/base.query-params.input-dto';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
+import { DataSource } from 'typeorm';
+
+interface RawBlogData {
+    id: string;
+    name: string;
+    description: string;
+    website_url: string;
+    created_at: string | Date;
+    is_membership: boolean;
+}
 
 @Injectable()
 export class BlogsQueryRepository {
-    constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
+    constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType,
+                private readonly dataSource: DataSource,) {}
 
     async getBlogName(sentBlogId: string) {
         return this.BlogModel.findOne({ _id: sentBlogId, deletedAt: null })
@@ -101,6 +112,85 @@ export class BlogsQueryRepository {
         const items = blogs.map(BlogViewDto.mapToView);
 
         return PaginatedViewDto.mapToView<BlogViewDto>({
+            items: items,
+            page: query.pageNumber,
+            size: query.pageSize,
+            totalCount: totalCount,
+        });
+    }
+
+    async SQLgetAllBlogs(
+        query: GetBlogsQueryParams,
+    ): Promise<PaginatedViewDto<BlogViewDto>> {
+
+        const whereConditions: string[] = [`deleted_at IS NULL`];
+        const orConditions: string[] = [];
+        const queryParams: any[] = [];
+        let indexParamCounter: number = 1;
+
+        if(query.searchNameTerm && query.searchNameTerm.trim() !== '') {
+            orConditions.push(`name ILIKE $${indexParamCounter}`);
+            queryParams.push(`%${query.searchNameTerm}%`);
+            indexParamCounter += 1;
+        }
+
+        if(orConditions.length > 0) {
+            whereConditions.push(`(${orConditions.join(' OR ')})`); // хоть тут и один параметр максимум, но на случай если их количество изменится все равно сделаю join
+        }
+
+        const whereClause = whereConditions.join(' AND ');
+
+        const auxSortingMapper: Record<string, string> = {
+            name: 'name',
+            description: 'description',
+            websiteUrl: 'website_url',
+            createdAt: 'created_at',
+            isMembership: 'is_membership',
+        };
+
+        const sortByColumn = auxSortingMapper[query.sortBy] || 'created_at';
+        const sortDirection = query.sortDirection && query.sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+        const offset = query.calculateSkip();
+        const limit = query.pageSize;
+
+        const itemsQuery = `
+            SELECT 
+                id,
+                name,
+                description,
+                website_url,
+                created_at,
+                is_membership
+            FROM blogs
+            WHERE ${whereClause}
+            ORDER BY ${sortByColumn} ${sortDirection}
+            LIMIT $${indexParamCounter}
+            OFFSET $${indexParamCounter+1}
+        `;
+
+        const countQuery = `
+            SELECT COUNT(*) ::int AS "totalCount"
+            FROM blogs
+            WHERE ${whereClause}
+        `;
+
+        const [blogsRows, countResult] = await Promise.all([
+            this.dataSource.query<RawBlogData[]>(itemsQuery, [
+                ...queryParams,
+                limit,
+                offset,
+            ]),
+            this.dataSource.query<{ totalCount: number }[]>(
+                countQuery,
+                queryParams,
+            ),
+        ]);
+
+        const items = blogsRows.map(SQLBlogViewDto.mapFromDbRaw);
+        const totalCount = countResult[0]?.totalCount ?? 0;
+
+        return PaginatedViewDto.mapToView<SQLBlogViewDto>({
             items: items,
             page: query.pageNumber,
             size: query.pageSize,

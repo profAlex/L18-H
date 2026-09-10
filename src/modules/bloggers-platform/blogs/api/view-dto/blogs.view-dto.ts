@@ -39,6 +39,7 @@
 //     isMembership: boolean;
 import { Blog, BlogDocument } from '../../domain/blog.entity';
 import { Types } from 'mongoose';
+import { SQLBlog } from '../../domain/sql-blog.entity';
 
 export class BlogViewDto {
     id: string;
@@ -74,5 +75,66 @@ export class BlogViewDto {
 
     static mapToView(blog: Blog & { _id: Types.ObjectId }): BlogViewDto {
         return new BlogViewDto(blog);
+    }
+}
+
+interface RawBlogData {
+    id: string;
+    name: string;
+    description: string;
+    website_url: string;
+    created_at: string | Date;
+    is_membership: boolean;
+}
+
+export class SQLBlogViewDto {
+    id: string;
+    name: string;
+    description: string;
+    websiteUrl: string;
+    createdAt: string;
+    isMembership: boolean;
+
+    constructor(blog: SQLBlog) {
+        this.id = blog.id;
+        this.name = blog.name;
+        this.description = blog.description;
+        this.websiteUrl = blog.websiteUrl;
+        this.createdAt =
+            blog.createdAt instanceof Date
+                ? blog.createdAt.toISOString()
+                : new Date(blog.createdAt).toISOString();
+        // if (
+        //     blog.createdAt instanceof Date &&
+        //     !isNaN(blog.createdAt.getTime())
+        // ) {
+        //     this.createdAt = blog.createdAt.toISOString();
+        // } else {
+        //     // Если прилетела строка, пробуем её распарсить
+        //     const parsedDate = new Date(blog.createdAt);
+        //     this.createdAt = !isNaN(parsedDate.getTime())
+        //         ? parsedDate.toISOString()
+        //         : new Date().toISOString(); // <-- Спасительный парашют: если дата битая/undefined, берем текущую
+        // }
+        this.isMembership = blog.isMembership;
+    }
+
+    static mapFromDbRaw(raw: RawBlogData): SQLBlogViewDto {
+        const dto = new SQLBlogViewDto({} as SQLBlog); // Обходим конструктор или заполняем напрямую
+        dto.id = raw.id;
+        dto.name = raw.name;
+        dto.description = raw.description;
+        dto.websiteUrl = raw.website_url; // Маппинг из snake_case
+        dto.createdAt =
+            raw.created_at instanceof Date
+                ? raw.created_at.toISOString()
+                : new Date(raw.created_at).toISOString();
+        dto.isMembership = raw.is_membership; // Маппинг из snake_case
+
+        return dto;
+    }
+
+    static mapToView(blog: SQLBlog): SQLBlogViewDto {
+        return new SQLBlogViewDto(blog);
     }
 }

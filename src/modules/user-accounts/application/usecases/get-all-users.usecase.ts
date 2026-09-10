@@ -1,13 +1,13 @@
 import { IQueryHandler, Query, QueryHandler } from '@nestjs/cqrs';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { UserViewDto } from '../../api/view-dto/users.view-dto';
+import { SQLUserViewDto, UserViewDto } from '../../api/view-dto/users.view-dto';
 import { TestQuery } from '../../../authorisation/application/usecases/test-query.usecase';
 import { SessionsCommandRepository } from '../../../authorisation/infrastructure/session/sessions.command-repository';
 import { UsersCommandRepository } from '../../infrastructure/users.command-repository';
 import { UsersQueryRepository } from '../../infrastructure/query/users.query-repository';
 import { GetUsersQueryParams } from '../../api/input-dto/get-users-query-params.input-dto';
 
-export class GetAllUsers extends Query<PaginatedViewDto<UserViewDto>> {
+export class GetAllUsers extends Query<PaginatedViewDto<SQLUserViewDto>> {
     constructor(
         public readonly query: GetUsersQueryParams,
         // public readonly req: Request,
@@ -28,7 +28,7 @@ export class GetAllUsersQueryHandler implements IQueryHandler<GetAllUsers> {
         // private jwtTokenProvider: JwtTokenProvider,
     ) {}
 
-    async execute({query}: GetAllUsers): Promise<PaginatedViewDto<UserViewDto>> {
+    async execute({query}: GetAllUsers): Promise<PaginatedViewDto<SQLUserViewDto>> {
 
         return this.usersQueryRepository.getAllUsers(query);
 

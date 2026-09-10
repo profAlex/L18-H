@@ -157,7 +157,7 @@ export class SessionsCommandRepository {
             return null;
         }
 
-        return SQLUserSession.reconstruct(sessionRow);
+        return SQLUserSession.reconstructInstance(sessionRow);
     }
 
     async findSessionByDeviceId(
@@ -194,7 +194,7 @@ export class SessionsCommandRepository {
             return null;
         }
 
-        return SQLUserSession.reconstruct(sessionRow);
+        return SQLUserSession.reconstructInstance(sessionRow);
     }
 
     // async removeAllButOneSession(

@@ -162,10 +162,11 @@ export class UsersQueryRepository {
 
     async getAllUsers(
         query: GetUsersQueryParams,
-    ): Promise<PaginatedViewDto<UserViewDto>> {
-        // массив SQL услоий для уточнения поиска WHERE
+    ): Promise<PaginatedViewDto<SQLUserViewDto>> {
+        // массив SQL-услоий для уточнения поиска WHERE
         const whereConditions: string[] = ['deleted_at IS NULL'];
-        // массив для передачи значений в плейсхолдеры $1, $2 и далее
+        // массив для передачи значений вместо плейсхолдеров $1, $2 и далее, которые будут положены сначала внутрь onConditions,
+        // а затем присоединены к whereConditions
         const queryParams: any[] = [];
         // счетчик для нумерации, изменяется в зависимости от наличия переданных query параметров
         let paramIndex = 1;

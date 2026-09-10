@@ -63,9 +63,12 @@ export class BlogsController {
     async getALlBlogs(
         @Query() query: GetBlogsQueryParams,
     ): Promise<PaginatedViewDto<BlogViewDto>> {
-        // console.log(query);
 
-        return this.blogsQueryRepository.getAllBlogs(query);
+        // тут все-таки не делать USEcase?
+        // Query (Запросы) — только читают данные (SELECT). Их НЕ оборачивают в Use Cases,
+        // а вызывают напрямую через Query Repository из контроллера.
+
+        return this.blogsQueryRepository.SQLgetAllBlogs(query);
     }
 
     // Create new blog
