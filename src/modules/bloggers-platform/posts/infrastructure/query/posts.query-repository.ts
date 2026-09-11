@@ -86,6 +86,124 @@ export class PostsQueryRepository {
         });
     }
 
+
+    async SQLgetPostsByBlogId({
+                               userId,
+                               blogId,
+                               query,
+                           }: {
+        userId?: string | null;
+        blogId: string;
+        query: GetPostsQueryParams;
+    }): Promise<PaginatedViewDto<PostViewDto>> {
+        const { sortBy, sortDirection, pageNumber, pageSize } = query;
+        const sentBlogId = blogId;
+        const sentUserId = userId;
+
+
+        const sortingMap: Record<string, string> ={
+            title: 'title',
+            shortDescription: 'short_description',
+            content: 'content',
+            blogId: 'blog_id',
+            blogName: 'name',
+            createdAt: 'created_at',
+        }
+
+        /* ITEMS STRUCTURE
+        "items":
+        [
+            {
+                "id": "string",
+                "title": "string",
+                "shortDescription": "string",
+                "content": "string",
+                "blogId": "string",
+                "blogName": "string",
+                "createdAt": "2026-09-11T16:25:24.289Z",
+                "extendedLikesInfo":
+                {
+                    "likesCount": 0,
+                    "dislikesCount": 0,
+                    "myStatus": "None",
+                    "newestLikes":
+                    [
+                        {
+                            "addedAt": "2026-09-11T16:25:24.289Z",
+                            "userId": "string",
+                            "login": "string"
+                        }
+                    ]
+                }
+            }
+        ]
+        * */
+        //***********************
+
+        const postInfoQuery = `
+            SELECT p.id, 
+                   p.title, 
+                   p.short_description as "shortDescription", 
+                   p.content, 
+                   p.blog_id as "blogId",
+                   b.name as "blogName",
+                   p.created_at as "createdAt",
+                   p.likes_count as "likesCount",
+                   p.dislikes_count as "dislikesCount",
+                   COALESCE(l.status, 'None') AS "myStatus"
+            FROM public.posts p 
+            LEFT JOIN public.blogs b ON p.blog_id = b.id
+            LEFT JOIN public.post_likes l ON l.post_id = p.id AND user_id = ${userId}
+            WHERE p.deleted_at IS NULL AND p.blog_id = ${blogId}
+            ORDER BY ${sortingClause} ${directionClause}
+            LIMIT ${limit}
+            OFFSET ${offset}
+        `;
+
+        const likesInfoQuery = `
+            SELECT
+            l.added_at AS "addedAt",
+                l.user_id AS "userId",
+                u.login AS "login"
+            FROM public.post_likes l
+            JOIN public.users u ON u.id = l.user_id
+            WHERE l.post_id = $postId AND l.status = 'Like'
+            ORDER BY l.added_at DESC
+            LIMIT 3;
+        `;
+        //************
+
+
+
+
+        const likesMap = new Map<string, LikeStatus>(); // Ключ: postId, Значение: likeStatus
+
+        if (sentUserId && postsList.length > 0) {
+            const postIdsList = postsList.map((post) => post._id.toString());
+
+            const userReactions =
+                await this.postLikesQueryRepository.getReactionListForPosts(
+                    postIdsList,
+                    sentUserId,
+                );
+
+            userReactions.forEach((reaction) => {
+                likesMap.set(reaction.postId.toString(), reaction.likeStatus);
+            });
+        }
+
+        return PaginatedViewDto.mapToView<PostViewDto>({
+            items: postsList.map((item) => {
+                const postIdStr = item._id.toString();
+                const myStatus = likesMap.get(postIdStr) || LikeStatus.None;
+                return PostViewDto.mapToView(item, myStatus);
+            }),
+            page: pageNumber,
+            size: pageSize,
+            totalCount: totalCount,
+        });
+    }
+
     // задача - в каждый отдельный пост в общей выдаче, вставить статус лайка
     // выданного (или не выданного) юзером, который запросил саму выдачу.
     // то есть найти как лайкнул или не лайкнул пост в выдаче юзер
