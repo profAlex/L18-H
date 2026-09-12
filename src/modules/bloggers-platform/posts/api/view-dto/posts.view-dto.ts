@@ -157,10 +157,7 @@ export class PostViewDto {
             const newestLikes = likesInfoArray
                 .filter((like) => like.postId === post.id)
                 .map((like) => ({
-                    addedAt:
-                        like.addedAt instanceof Date
-                            ? like.addedAt.toISOString()
-                            : new Date(like.addedAt).toISOString(),
+                    addedAt: new Date(like.addedAt).toISOString(),
                     userId: like.userId,
                     login: like.login,
                 }));
@@ -172,10 +169,7 @@ export class PostViewDto {
                 content: post.content,
                 blogId: post.blogId,
                 blogName: post.blogName,
-                createdAt:
-                    post.createdAt instanceof Date
-                        ? post.createdAt.toISOString()
-                        : new Date(post.createdAt).toISOString(),
+                createdAt: new Date(post.createdAt).toISOString(),
                 extendedLikesInfo: {
                     likesCount: Number(post.likesCount),
                     dislikesCount: Number(post.dislikesCount),

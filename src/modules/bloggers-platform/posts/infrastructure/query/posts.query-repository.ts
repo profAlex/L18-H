@@ -189,29 +189,28 @@ export class PostsQueryRepository {
             LIMIT $3 OFFSET $4;
         `;
 
-        const postRows = await this.dataSource.query<postQueryRawDto[]>(
-            postInfoQuery,
-            [userId, blogId, limit, offset],
-        );
 
         const countQuery = `
-            SELECT COUNT(*) ::int AS "totalCount"
+            SELECT COUNT(*)::int AS "totalCount"
             FROM public.posts p
-                     LEFT JOIN public.blogs b ON p.blog_id = b.id
-                     LEFT JOIN public.post_likes l ON l.post_id = p.id AND user_id = $1
             WHERE p.deleted_at IS NULL
-              AND p.blog_id = $2
-            ORDER BY ${sortingClause} ${directionClause}
-            LIMIT $3 OFFSET $4;
+              AND p.blog_id = $1;
         `;
 
-        const countResult = await this.dataSource.query<
-            { totalCount: number }[]
-        >(countQuery, [userId, blogId, limit, offset]);
+        const [postRows, countResult] = await Promise.all([
+            this.dataSource.query<postQueryRawDto[]>(
+                postInfoQuery,
+                [userId, blogId, limit, offset],
+            ),
+            this.dataSource.query<{ totalCount: number }[]>(
+                countQuery,
+                [blogId],
+            ),
+        ]);
 
         const totalCount = countResult[0]?.totalCount ?? 0;
 
-        // Если постов нет — сразу возвращаем пустой результат и не делаем 2-й запрос
+        // сразу возвращаем пустой результат и не делаем 2-й запрос если постов нет
         if (!postRows.length) {
             return PaginatedViewDto.mapToView<PostViewDto>({
                 items: [],
