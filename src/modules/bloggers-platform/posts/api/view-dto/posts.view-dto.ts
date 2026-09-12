@@ -27,6 +27,7 @@
 import { LikeStatus } from '../../../../../core/enums/like-status.enum';
 import { Post } from '../../domain/post.entity';
 import { Types } from 'mongoose';
+import { likeInfoQueryRawDto, postQueryRawDto } from '../../infrastructure/query/posts.query-repository';
 
 // export class PostViewDto {
 //     id: string;
@@ -145,5 +146,43 @@ export class PostViewDto {
         myStatus: LikeStatus = LikeStatus.None,
     ): PostViewDto {
         return new PostViewDto(post, myStatus);
+    }
+
+    static mapToViewFromFlatSQL(
+        postArray: postQueryRawDto[],
+        likesInfoArray: likeInfoQueryRawDto[],
+    ): PostViewDto[] {
+        return postArray.map((post) => {
+            // Находим лайки только для текущего поста
+            const newestLikes = likesInfoArray
+                .filter((like) => like.postId === post.id)
+                .map((like) => ({
+                    addedAt:
+                        like.addedAt instanceof Date
+                            ? like.addedAt.toISOString()
+                            : new Date(like.addedAt).toISOString(),
+                    userId: like.userId,
+                    login: like.login,
+                }));
+
+            return {
+                id: post.id,
+                title: post.title,
+                shortDescription: post.shortDescription,
+                content: post.content,
+                blogId: post.blogId,
+                blogName: post.blogName,
+                createdAt:
+                    post.createdAt instanceof Date
+                        ? post.createdAt.toISOString()
+                        : new Date(post.createdAt).toISOString(),
+                extendedLikesInfo: {
+                    likesCount: Number(post.likesCount),
+                    dislikesCount: Number(post.dislikesCount),
+                    myStatus: (post.myStatus as LikeStatus) || LikeStatus.None,
+                    newestLikes: newestLikes,
+                },
+            };
+        });
     }
 }

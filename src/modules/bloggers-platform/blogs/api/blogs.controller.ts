@@ -37,6 +37,18 @@ import { JwtOptionalAuthGuard } from '../../../authorisation/guards/bearer/jwt.a
 import { ExtractUserIfExistsFromRequest } from '../../../authorisation/decorators/extract-user-if-exists.decorator';
 import { UserAccessTokenContextDto } from '../../../authorisation/guards/dto/user-access-token-context.dto';
 
+// const insertQuery = `
+//             INSERT INTO public.post_likes (post_id, user_id, status, added_at)
+//             VALUES ($1, $2, $3, NOW())
+//             ON CONFLICT (post_id, user_id)
+//             DO UPDATE SET
+//                status = EXCLUDED.status,
+//                added_at = NOW();
+//
+//
+//         `;
+
+
 @ApiTags('Blogs endpoint')
 @Controller('blogs')
 export class BlogsController {
