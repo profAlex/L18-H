@@ -167,7 +167,6 @@ export class PostsQueryRepository {
             }
         ]
         * */
-        //***********************
 
         const postInfoQuery = `
             SELECT p.id,
@@ -188,7 +187,6 @@ export class PostsQueryRepository {
             ORDER BY ${sortingClause} ${directionClause}
             LIMIT $3 OFFSET $4;
         `;
-
 
         const countQuery = `
             SELECT COUNT(*)::int AS "totalCount"
@@ -239,8 +237,6 @@ export class PostsQueryRepository {
             ORDER BY (sub.post_id, sub.added_at) DESC;
         `;
 
-        //************
-
         const likeInfoRows = await this.dataSource.query<likeInfoQueryRawDto[]>(
             likesInfoQuery,
             [postIdArray],
@@ -252,19 +248,6 @@ export class PostsQueryRepository {
             postRows,
             likeInfoRows,
         );
-        // if (sentUserId && postsList.length > 0) {
-        //     const postIdsList = postsList.map((post) => post._id.toString());
-        //
-        //     const userReactions =
-        //         await this.postLikesQueryRepository.getReactionListForPosts(
-        //             postIdsList,
-        //             sentUserId,
-        //         );
-        //
-        //     userReactions.forEach((reaction) => {
-        //         likesMap.set(reaction.postId.toString(), reaction.likeStatus);
-        //     });
-        // }
 
         return PaginatedViewDto.mapToView<PostViewDto>({
             items: resultItems,

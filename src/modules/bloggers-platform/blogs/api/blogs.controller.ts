@@ -36,6 +36,11 @@ import { BasicAuthGuard } from '../../../authorisation/guards/basic/basic.auth-g
 import { JwtOptionalAuthGuard } from '../../../authorisation/guards/bearer/jwt.auth-guard';
 import { ExtractUserIfExistsFromRequest } from '../../../authorisation/decorators/extract-user-if-exists.decorator';
 import { UserAccessTokenContextDto } from '../../../authorisation/guards/dto/user-access-token-context.dto';
+import {
+    GetPostsByBlogIdQuery,
+    GetPostsByBlogIdQueryHandler,
+} from '../application/usecases/get-posts-by-blog-id.usecase';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 
 // const insertQuery = `
 //             INSERT INTO public.post_likes (post_id, user_id, status, added_at)
@@ -56,6 +61,8 @@ export class BlogsController {
         private blogsQueryRepository: BlogsQueryRepository,
         private blogsService: BlogsService,
         private postsService: PostsService,
+        private readonly commandBus: CommandBus,
+        private readonly queryBus: QueryBus,
     ) {
         console.log('BlogsController created');
     }
@@ -111,11 +118,9 @@ export class BlogsController {
         @Query() query: GetPostsQueryParams,
         @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
     ): Promise<PaginatedViewDto<PostViewDto>> {
-        return this.postsService.getPostsByBlogId({
-            userId: user?.userId,
-            blogId: blogId,
-            query: query,
-        });
+        return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
+            new GetPostsByBlogIdQuery(blogId, query, user?.userId),
+        );
     }
 
     // Create new post for specific blog

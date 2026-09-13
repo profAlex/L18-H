@@ -222,4 +222,21 @@ export class BlogsQueryRepository {
 
         return count > 0;
     }
+
+    async SQLifBlogExists(blogId: string): Promise<boolean> {
+
+        const query = ` 
+            SELECT EXISTS (
+                SELECT 1
+                FROM public.blogs
+                WHERE id = $1 AND deleted_at IS NULL
+            ) as exists;
+        `;
+
+        const [resultRow] = await this.dataSource.query<{exists: boolean}[]>(query, [blogId]);
+
+        // если вдруг по какой-то причине драйвер вернет пустой массив, тогда просто nest выдаст 500
+        // Boolean(...): Гарантирует, что метод всегда вернет строго true или false (boolean), даже если СУБД вернет 1/0 или "true"/"false"
+        return Boolean(resultRow?.exists);
+    }
 }
