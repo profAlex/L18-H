@@ -214,6 +214,30 @@ export class BlogsQueryRepository {
         return BlogViewDto.mapToView(blog);
     }
 
+
+    async SQLgetBlogById(blogId: string): Promise<SQLBlogViewDto | null> {
+        const query = `
+            SELECT 
+                id,
+                name,
+                description,
+                website_url,
+                created_at,
+                is_membership
+            FROM public.blogs
+            WHERE id = $1 AND deleted_at IS NULL;
+        `;
+
+        const [blogRow] = await this.dataSource.query<RawBlogData[]>(query, [blogId]);
+
+        if(!blogRow) {
+            return null;
+        }
+
+        return SQLBlogViewDto.mapFromDbRaw(blogRow);
+    }
+
+
     async ifBlogExists(blogId: string): Promise<boolean> {
         const count = await this.BlogModel.countDocuments({
             _id: blogId,

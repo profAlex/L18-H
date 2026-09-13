@@ -20,7 +20,7 @@ import {
 } from '@nestjs/common';
 import { GetBlogsQueryParams } from './input-dto/get-blogs-query-params.input-dto';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto } from './view-dto/blogs.view-dto';
+import { BlogViewDto, SQLBlogViewDto } from './view-dto/blogs.view-dto';
 import { SwaggerBlogsPaginatedViewDto } from '../../../../core/swagger/blogs.paginated-view-schema';
 import { CreateBlogInputDto } from './input-dto/blogs.input-dto';
 import { GetPostsQueryParams } from '../../posts/api/input-dto/get-posts-query-params.input-dto';
@@ -41,6 +41,7 @@ import {
     GetPostsByBlogIdQueryHandler,
 } from '../application/usecases/get-posts-by-blog-id.usecase';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { GetBlogByIdQuery } from '../application/usecases/get-blog-by-id.usecase';
 
 // const insertQuery = `
 //             INSERT INTO public.post_likes (post_id, user_id, status, added_at)
@@ -137,8 +138,8 @@ export class BlogsController {
     // Returns blog by id
     @Get(':id')
     @HttpCode(HttpStatus.OK)
-    async getBlogById(@Param('id') id: string): Promise<BlogViewDto> {
-        return this.blogsQueryRepository.getBlogByIdOrNotFoundFail(id);
+    async getBlogById(@Param('id') id: string): Promise<SQLBlogViewDto> {
+        return this.queryBus.execute<SQLBlogViewDto>(new GetBlogByIdQuery(id));
     }
 
     // Update existing Blog by id with InputModel

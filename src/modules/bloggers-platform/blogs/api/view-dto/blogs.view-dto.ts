@@ -78,7 +78,7 @@ export class BlogViewDto {
     }
 }
 
-interface RawBlogData {
+export interface SQLRawBlogData {
     id: string;
     name: string;
     description: string;
@@ -119,7 +119,7 @@ export class SQLBlogViewDto {
         this.isMembership = blog.isMembership;
     }
 
-    static mapFromDbRaw(raw: RawBlogData): SQLBlogViewDto {
+    static mapFromDbRaw(raw: SQLRawBlogData): SQLBlogViewDto {
         const dto = new SQLBlogViewDto({} as SQLBlog); // Обходим конструктор или заполняем напрямую
         dto.id = raw.id;
         dto.name = raw.name;
