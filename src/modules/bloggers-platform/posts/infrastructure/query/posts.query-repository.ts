@@ -121,19 +121,17 @@ export class PostsQueryRepository {
         query: GetPostsQueryParams;
     }): Promise<PaginatedViewDto<PostViewDto>> {
         const { sortBy, sortDirection, pageNumber, pageSize } = query;
-        const sentBlogId = blogId;
-        const sentUserId = userId;
 
         const sortingMap: Record<string, string> = {
             title: 'title',
             shortDescription: 'short_description',
             content: 'content',
             blogId: 'blog_id',
-            blogName: 'name',
-            createdAt: 'created_at',
+            blogName: 'b.name',
+            createdAt: 'p.created_at',
         };
 
-        const sortingClause = sortingMap[sortBy] || 'created_at';
+        const sortingClause = sortingMap[sortBy] || 'p.created_at';
         const directionClause =
             sortDirection?.trim().toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
         const limit = pageSize;
@@ -181,7 +179,7 @@ export class PostsQueryRepository {
                    COALESCE(l.status, 'None') AS "myStatus"
             FROM public.posts p
                      LEFT JOIN public.blogs b ON p.blog_id = b.id
-                     LEFT JOIN public.post_likes l ON l.post_id = p.id AND user_id = $1
+                     LEFT JOIN public.post_likes l ON l.post_id = p.id AND l.user_id = $1
             WHERE p.deleted_at IS NULL
               AND p.blog_id = $2
             ORDER BY ${sortingClause} ${directionClause}
@@ -198,7 +196,7 @@ export class PostsQueryRepository {
         const [postRows, countResult] = await Promise.all([
             this.dataSource.query<postQueryRawDto[]>(
                 postInfoQuery,
-                [userId, blogId, limit, offset],
+                [userId ?? null, blogId, limit, offset],
             ),
             this.dataSource.query<{ totalCount: number }[]>(
                 countQuery,
@@ -234,7 +232,7 @@ export class PostsQueryRepository {
                     AND l.status = 'Like') sub
                      JOIN public.users u ON sub.user_id = u.id
             WHERE sub.rn <= 3
-            ORDER BY (sub.post_id, sub.added_at) DESC;
+            ORDER BY sub.post_id ASC, sub.added_at DESC;
         `;
 
         const likeInfoRows = await this.dataSource.query<likeInfoQueryRawDto[]>(
@@ -320,6 +318,117 @@ export class PostsQueryRepository {
             totalCount: totalCount,
         });
     }
+
+
+    async SQLgetAllPosts({
+                          sentUserId,
+                          query,
+                      }: {
+        sentUserId?: string | undefined;
+        query: GetPostsQueryParams;
+    }): Promise<PaginatedViewDto<PostViewDto>> {
+        const { sortBy, sortDirection, pageNumber, pageSize } = query;
+
+        const sortingMap: Record<string, string> = {
+            title: 'title',
+            shortDescription: 'short_description',
+            content: 'content',
+            blogId: 'blog_id',
+            blogName: 'b.name',
+            createdAt: 'p.created_at',
+        };
+
+        const sortingClause = sortingMap[sortBy] || 'p.created_at';
+        const directionClause =
+            sortDirection?.trim().toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+        const limit = pageSize;
+        const offset = query.calculateSkip();
+
+        const postInfoQuery = `
+            SELECT p.id,
+                   p.title,
+                   p.short_description        as "shortDescription",
+                   p.content,
+                   p.blog_id                  as "blogId",
+                   b.name                     as "blogName",
+                   p.created_at               as "createdAt",
+                   p.likes_count              as "likesCount",
+                   p.dislikes_count           as "dislikesCount",
+                   COALESCE(l.status, 'None') AS "myStatus"
+            FROM public.posts p
+                     LEFT JOIN public.blogs b ON p.blog_id = b.id
+                     LEFT JOIN public.post_likes l ON l.post_id = p.id AND l.user_id = $1
+            WHERE p.deleted_at IS NULL
+            ORDER BY ${sortingClause} ${directionClause}
+            LIMIT $2
+            OFFSET $3;
+        `;
+
+        const countQuery = `
+            SELECT COUNT(*)::int AS "totalCount"
+            FROM public.posts p
+            LEFT JOIN public.blogs b ON p.blog_id = b.id
+            WHERE p.deleted_at IS NULL AND b.deleted_at IS NULL;
+        `;
+
+        const [postRows, countResult] = await Promise.all([
+            this.dataSource.query<postQueryRawDto[]>(
+                postInfoQuery,
+                [sentUserId ?? null, limit, offset],
+            ),
+            this.dataSource.query<{ totalCount: number }[]>(
+                countQuery
+            ),
+        ]);
+
+        const totalCount = countResult[0]?.totalCount ?? 0;
+
+        // сразу возвращаем пустой результат и не делаем 2-й запрос если постов нет
+        if (!postRows.length) {
+            return PaginatedViewDto.mapToView<PostViewDto>({
+                items: [],
+                page: pageNumber,
+                size: pageSize,
+                totalCount: totalCount,
+            });
+        }
+
+
+        const postIdArray = postRows.map((postRow) => postRow.id);
+
+        const likesInfoQuery = `
+            SELECT sub.post_id  AS "postId",
+                   sub.user_id  AS "userId",
+                   sub.added_at AS "addedAt",
+                   u.login      AS "login"
+            FROM (SELECT l.post_id,
+                         l.user_id,
+                         l.added_at,
+                         ROW_NUMBER() OVER (PARTITION BY l.post_id ORDER BY l.added_at DESC ) as rn
+                  FROM public.post_likes l
+                  WHERE l.post_id = ANY ($1::uuid[])
+                    AND l.status = 'Like') sub
+                     JOIN public.users u ON sub.user_id = u.id
+            WHERE sub.rn <= 3
+            ORDER BY sub.post_id ASC, sub.added_at DESC;
+        `;
+
+        const likeInfoRows = await this.dataSource.query<likeInfoQueryRawDto[]>(
+            likesInfoQuery,
+            [postIdArray],
+        );
+
+        const itemsArray = PostViewDto.mapToViewFromFlatSQL(postRows, likeInfoRows);
+
+
+        return PaginatedViewDto.mapToView<PostViewDto>({
+            items: itemsArray,
+            page: pageNumber,
+            size: pageSize,
+            totalCount: totalCount,
+        });
+    }
+
 
     async getPostByIdOrNotFoundFail(sentPostId: string): Promise<PostViewDto> {
         const post = await this.PostModel.findOne({

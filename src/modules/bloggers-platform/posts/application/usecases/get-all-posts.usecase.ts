@@ -23,7 +23,7 @@ export class GetAllPostsHandler implements IQueryHandler<GetAllPosts> {
         query,
         userId,
     }: GetAllPosts): Promise<PaginatedViewDto<PostViewDto>> {
-        return this.postsQueryRepository.getAllPosts({
+        return this.postsQueryRepository.SQLgetAllPosts({
             sentUserId: userId,
             query,
         });

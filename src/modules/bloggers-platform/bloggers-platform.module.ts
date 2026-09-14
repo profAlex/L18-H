@@ -38,6 +38,8 @@ import { CommentLikesQueryRepository } from './likes/infrastructure/query/commen
 import { PostLikesCommandRepository } from './likes/infrastructure/post-likes.command-repostory';
 import { PostLikesQueryRepository } from './likes/infrastructure/query/post-likes.query-repository';
 import { User, UserSchema } from '../user-accounts/domain/user.entity';
+import { GetPostsByBlogIdQuery } from './blogs/application/usecases/get-posts-by-blog-id.usecase';
+import { GetBlogByIdQuery } from './blogs/application/usecases/get-blog-by-id.usecase';
 
 //тут регистрируем провайдеры всех сущностей блоггерской платформы (blogs, posts, comments, etc...)
 @Module({
@@ -59,6 +61,8 @@ import { User, UserSchema } from '../user-accounts/domain/user.entity';
     ],
     controllers: [BlogsController, PostsController, CommentsController],
     providers: [
+        GetBlogByIdQuery,
+        GetPostsByBlogIdQuery,
         ChangeCommentLikeStatusHandler,
         DeleteCommentByIdHandler,
         UpdateCommentByIdHandler,
