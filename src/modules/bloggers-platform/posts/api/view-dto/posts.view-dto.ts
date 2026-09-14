@@ -149,10 +149,9 @@ export class PostViewDto {
     }
 
     static mapToViewFromFlatSQL(
-        postArray: postQueryRawDto[],
+        post: postQueryRawDto,
         likesInfoArray: likeInfoQueryRawDto[],
-    ): PostViewDto[] {
-        return postArray.map((post) => {
+    ): PostViewDto {
             // Находим лайки только для текущего поста
             const newestLikes = likesInfoArray
                 .filter((like) => like.postId === post.id)
@@ -177,6 +176,5 @@ export class PostViewDto {
                     newestLikes: newestLikes,
                 },
             };
-        });
     }
 }

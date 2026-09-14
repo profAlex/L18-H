@@ -194,14 +194,15 @@ export class PostsQueryRepository {
         `;
 
         const [postRows, countResult] = await Promise.all([
-            this.dataSource.query<postQueryRawDto[]>(
-                postInfoQuery,
-                [userId ?? null, blogId, limit, offset],
-            ),
-            this.dataSource.query<{ totalCount: number }[]>(
-                countQuery,
-                [blogId],
-            ),
+            this.dataSource.query<postQueryRawDto[]>(postInfoQuery, [
+                userId ?? null,
+                blogId,
+                limit,
+                offset,
+            ]),
+            this.dataSource.query<{ totalCount: number }[]>(countQuery, [
+                blogId,
+            ]),
         ]);
 
         const totalCount = countResult[0]?.totalCount ?? 0;
@@ -240,15 +241,10 @@ export class PostsQueryRepository {
             [postIdArray],
         );
 
-        // const likesMap = new Map<string, LikeStatus>(); // Ключ: postId, Значение: likeStatus
-
-        const resultItems = PostViewDto.mapToViewFromFlatSQL(
-            postRows,
-            likeInfoRows,
-        );
-
         return PaginatedViewDto.mapToView<PostViewDto>({
-            items: resultItems,
+            items: postRows.map((post) =>
+                PostViewDto.mapToViewFromFlatSQL(post, likeInfoRows),
+            ),
             page: pageNumber,
             size: pageSize,
             totalCount: totalCount,
@@ -319,11 +315,10 @@ export class PostsQueryRepository {
         });
     }
 
-
     async SQLgetAllPosts({
-                          sentUserId,
-                          query,
-                      }: {
+        sentUserId,
+        query,
+    }: {
         sentUserId?: string | undefined;
         query: GetPostsQueryParams;
     }): Promise<PaginatedViewDto<PostViewDto>> {
@@ -360,25 +355,24 @@ export class PostsQueryRepository {
                      LEFT JOIN public.post_likes l ON l.post_id = p.id AND l.user_id = $1
             WHERE p.deleted_at IS NULL
             ORDER BY ${sortingClause} ${directionClause}
-            LIMIT $2
-            OFFSET $3;
+            LIMIT $2 OFFSET $3;
         `;
 
         const countQuery = `
             SELECT COUNT(*)::int AS "totalCount"
             FROM public.posts p
-            LEFT JOIN public.blogs b ON p.blog_id = b.id
-            WHERE p.deleted_at IS NULL AND b.deleted_at IS NULL;
+                     LEFT JOIN public.blogs b ON p.blog_id = b.id
+            WHERE p.deleted_at IS NULL
+              AND b.deleted_at IS NULL;
         `;
 
         const [postRows, countResult] = await Promise.all([
-            this.dataSource.query<postQueryRawDto[]>(
-                postInfoQuery,
-                [sentUserId ?? null, limit, offset],
-            ),
-            this.dataSource.query<{ totalCount: number }[]>(
-                countQuery
-            ),
+            this.dataSource.query<postQueryRawDto[]>(postInfoQuery, [
+                sentUserId ?? null,
+                limit,
+                offset,
+            ]),
+            this.dataSource.query<{ totalCount: number }[]>(countQuery),
         ]);
 
         const totalCount = countResult[0]?.totalCount ?? 0;
@@ -392,7 +386,6 @@ export class PostsQueryRepository {
                 totalCount: totalCount,
             });
         }
-
 
         const postIdArray = postRows.map((postRow) => postRow.id);
 
@@ -418,17 +411,15 @@ export class PostsQueryRepository {
             [postIdArray],
         );
 
-        const itemsArray = PostViewDto.mapToViewFromFlatSQL(postRows, likeInfoRows);
-
-
         return PaginatedViewDto.mapToView<PostViewDto>({
-            items: itemsArray,
+            items: postRows.map((post) =>
+                PostViewDto.mapToViewFromFlatSQL(post, likeInfoRows),
+            ),
             page: pageNumber,
             size: pageSize,
             totalCount: totalCount,
         });
     }
-
 
     async getPostByIdOrNotFoundFail(sentPostId: string): Promise<PostViewDto> {
         const post = await this.PostModel.findOne({
@@ -444,5 +435,79 @@ export class PostsQueryRepository {
         }
 
         return PostViewDto.mapToView(post);
+    }
+
+    async SQLgetPostById({
+        postId,
+        userId,
+    }: {
+        postId: string;
+        userId: string | undefined;
+    }): Promise<PostViewDto | null> {
+
+        /*
+        {
+          "id": "string",
+          "title": "string",
+          "shortDescription": "string",
+          "content": "string",
+          "blogId": "string",
+          "blogName": "string",
+          "createdAt": "2026-09-14T13:20:15.374Z",
+          "extendedLikesInfo": {
+            "likesCount": 0,
+            "dislikesCount": 0,
+            "myStatus": "None",
+            "newestLikes": [
+              {
+                "addedAt": "2026-09-14T13:20:15.374Z",
+                "userId": "string",
+                "login": "string"
+              }
+            ]
+          }
+        }
+
+        */
+
+        const postQuery = `
+            SELECT
+                p.id                       AS "id",
+                p.title                    AS "title",
+                p.short_description        AS "shortDescription",
+                p.content                  AS "content",
+                p.blog_id                  AS "blogId",
+                b.name                     AS "blogName",
+                p.created_at               AS "createdAt",
+                p.likes_count              AS "likesCount",
+                p.dislikes_count           AS "dislikesCount",
+                COALESCE(l.status, 'None') AS "myStatus"
+            FROM public.posts p
+                     JOIN public.blogs b ON p.blog_id = b.id AND b.deleted_at IS NULL
+                     LEFT JOIN public.post_likes l ON l.post_id = p.id AND l.user_id = $2
+            WHERE p.id = $1 AND p.deleted_at IS NULL
+            LIMIT 1;
+        `;
+
+        const [postRow] = await this.dataSource.query<postQueryRawDto[]>(postQuery, [postId, userId ?? null]);
+        if(!postRow){
+            return null;
+        }
+
+        const likesInfoQuery = `
+            SELECT l.post_id  AS "postId",
+                   l.user_id  AS "userId",
+                   l.added_at AS "addedAt",
+                   u.login    AS "login"
+            FROM public.post_likes l
+                     JOIN public.users u ON l.user_id = u.id
+            WHERE l.post_id = $1 AND l.status = 'Like'
+            ORDER BY l.added_at DESC
+            LIMIT 3;
+        `;
+
+        const likeInfoRow = await this.dataSource.query<likeInfoQueryRawDto[]>(likesInfoQuery, [postId]);
+
+        return PostViewDto.mapToViewFromFlatSQL(postRow, likeInfoRow);
     }
 }
