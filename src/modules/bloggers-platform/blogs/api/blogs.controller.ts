@@ -91,17 +91,6 @@ export class BlogsController {
         return this.blogsQueryRepository.SQLgetAllBlogs(query);
     }
 
-    // Create new blog
-    @UseGuards(BasicAuthGuard)
-    @Post()
-    @HttpCode(HttpStatus.CREATED)
-    async createNewBlog(
-        @Body() body: CreateBlogInputDto,
-    ): Promise<BlogViewDto> {
-        const blogId = await this.blogsService.createNewBlog(body);
-
-        return this.blogsQueryRepository.getBlogByIdOrNotFoundFail(blogId);
-    }
 
     // Returns all posts for specified blog
     @ApiOperation({
@@ -111,7 +100,7 @@ export class BlogsController {
     @ApiParam({ name: 'blogId' }) //для сваггера
     // TODO: надо сделать плоский класс чтобы swagger подхватил то тчо внутри items[] находится, по аналогии с SwaggerBlogsPaginatedViewDto
     @ApiOkResponse({ type: PaginatedViewDto<PostViewDto> })
-    @UseGuards(JwtOptionalAuthGuard)
+    // @UseGuards(JwtOptionalAuthGuard)
     @Get(':blogId/posts')
     @HttpCode(HttpStatus.OK)
     async getPostsByBlogId(
@@ -124,6 +113,38 @@ export class BlogsController {
         );
     }
 
+
+    // Returns blog by id
+    @Get(':id')
+    @HttpCode(HttpStatus.OK)
+    async getBlogById(@Param('id') id: string): Promise<SQLBlogViewDto> {
+        return this.queryBus.execute<SQLBlogViewDto>(new GetBlogByIdQuery(id));
+    }
+
+
+    //**************************************************************************
+    //**************************************************************************
+
+
+
+
+
+
+
+
+    // Create new blog
+    @UseGuards(BasicAuthGuard)
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    async createNewBlog(
+        @Body() body: CreateBlogInputDto,
+    ): Promise<BlogViewDto> {
+        const blogId = await this.blogsService.createNewBlog(body);
+
+        return this.blogsQueryRepository.getBlogByIdOrNotFoundFail(blogId);
+    }
+
+
     // Create new post for specific blog
     @UseGuards(BasicAuthGuard)
     @Post(':blogId/posts')
@@ -135,12 +156,7 @@ export class BlogsController {
         return this.postsService.createPostByBlogId({ blogId, body });
     }
 
-    // Returns blog by id
-    @Get(':id')
-    @HttpCode(HttpStatus.OK)
-    async getBlogById(@Param('id') id: string): Promise<SQLBlogViewDto> {
-        return this.queryBus.execute<SQLBlogViewDto>(new GetBlogByIdQuery(id));
-    }
+
 
     // Update existing Blog by id with InputModel
     @UseGuards(BasicAuthGuard)

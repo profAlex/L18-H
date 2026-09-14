@@ -51,6 +51,50 @@ export class PostsController {
         console.log('PostsController created');
     }
 
+
+
+    // Return post by id
+    @ApiOperation({ summary: 'Return post by id' })
+    @ApiParam({ name: 'id' })
+    // @UseGuards(JwtOptionalAuthGuard)
+    @Get(':id')
+    @HttpCode(HttpStatus.OK)
+    async getPostById(
+        @Param('id') postId: string,
+        @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
+    ): Promise<PostViewDto> {
+        return this.queryBus.execute<PostViewDto>(
+            new GetPostById(postId, user?.userId),
+        );
+    }
+
+
+    // Returns all posts
+    @ApiOperation({ summary: 'Returns all posts' })
+    // @UseGuards(JwtOptionalAuthGuard)
+    @Get()
+    @HttpCode(HttpStatus.OK)
+    async getAllPosts(
+        @Query() query: GetPostsQueryParams,
+        @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
+    ): Promise<PaginatedViewDto<PostViewDto>> {
+        return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
+            new GetAllPosts(query, user?.userId),
+        );
+    }
+
+
+    //**************************************************************************
+    //**************************************************************************
+
+
+
+
+
+
+
+
+
     // Make like/unlike/dislike/undislike operation
     @ApiOperation({ summary: 'Make like/unlike/dislike/undislike a post' })
     @ApiParam({ name: 'postId' })
@@ -101,19 +145,7 @@ export class PostsController {
         );
     }
 
-    // Returns all posts
-    @ApiOperation({ summary: 'Returns all posts' })
-    @UseGuards(JwtOptionalAuthGuard)
-    @Get()
-    @HttpCode(HttpStatus.OK)
-    async getAllPosts(
-        @Query() query: GetPostsQueryParams,
-        @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PaginatedViewDto<PostViewDto>> {
-        return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
-            new GetAllPosts(query, user?.userId),
-        );
-    }
+
 
     // Create new post
     @ApiOperation({ summary: 'Create new post' })
@@ -125,20 +157,7 @@ export class PostsController {
         return this.commandBus.execute<CreatePost>(new CreatePost(body));
     }
 
-    // Return post by id
-    @ApiOperation({ summary: 'Return post by id' })
-    @ApiParam({ name: 'id' })
-    @UseGuards(JwtOptionalAuthGuard)
-    @Get(':id')
-    @HttpCode(HttpStatus.OK)
-    async getPostById(
-        @Param('id') postId: string,
-        @ExtractUserIfExistsFromRequest() user: UserAccessTokenContextDto,
-    ): Promise<PostViewDto> {
-        return this.queryBus.execute<PostViewDto>(
-            new GetPostById(postId, user?.userId),
-        );
-    }
+
 
     // Update existing post by id with InputModel
     @ApiOperation({ summary: 'Update existing post by id with InputModel' })
