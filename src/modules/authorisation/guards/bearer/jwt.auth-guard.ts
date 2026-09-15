@@ -7,6 +7,12 @@ import {
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 
+// порядок:
+// 1. гвард делает вызов canActivate(context) (или базовый super.canActivate(context) из класса AuthGuard.)
+// 2. canActivate вызывает Стратегию Passport (вызов метода .validate() внутри конкретной PassportStrategy)
+// 3. canActivate вызывает ваш handleRequest(err, userData, info, context), передает результаты работы стратегии в метод handleRequest.
+// 4. если в handleRequest передали не пустой объект -> это объект летит по пайплайну далее в место вызова гварда, иначе броасет исключение вылетает из handleRequest -> из canActivate -> на этом исполнение запроса останавливается
+
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
     handleRequest<TUser = any>(
@@ -59,3 +65,4 @@ export class JwtOptionalAuthGuard extends AuthGuard('jwt') {
         return userData;
     }
 }
+

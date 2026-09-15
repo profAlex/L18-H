@@ -56,7 +56,7 @@ export class PostsController {
     // Return post by id
     @ApiOperation({ summary: 'Return post by id' })
     @ApiParam({ name: 'id' })
-    // @UseGuards(JwtOptionalAuthGuard)
+    @UseGuards(JwtOptionalAuthGuard)
     @Get(':id')
     @HttpCode(HttpStatus.OK)
     async getPostById(
