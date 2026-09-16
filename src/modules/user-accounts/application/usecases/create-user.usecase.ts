@@ -33,7 +33,7 @@ export class CreateUserHandler implements ICommandHandler<CreateUser> {
 
         const confirmationCode = UUIDGeneratorUtil.generateUUID();
 
-        // 1. Создаем чистую доменную сущность (без Mongoose и без DI)
+        // создаем чистую доменную сущность (без Mongoose и без DI)
         const newUser = SQLUser.createInstance({
             login: userData.login,
             email: userData.email,
@@ -41,11 +41,10 @@ export class CreateUserHandler implements ICommandHandler<CreateUser> {
             confirmationCode: confirmationCode,
         });
 
-        // console.log("newUser created", newUser.id);
-        // 2. Сохраняем в PostgreSQL через Command-репозиторий
+        // сохраняем в PostgreSQL через Command-репозиторий
         await this.usersCommandRepository.SQLsave(newUser);
 
-        // 3. Возвращаем UUID созданного пользователя
+        // возвращаем айди
         return newUser.id;
     }
 }

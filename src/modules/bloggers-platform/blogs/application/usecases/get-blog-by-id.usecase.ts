@@ -4,7 +4,7 @@ import { BlogsQueryRepository } from '../../infrastructure/query/blogs.query-rep
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
-export class GetBlogByIdQuery extends Query<BlogViewDto> {
+export class GetBlogByIdQuery extends Query<SQLBlogViewDto> {
     constructor(public readonly blogId: string) {
         super();
     }

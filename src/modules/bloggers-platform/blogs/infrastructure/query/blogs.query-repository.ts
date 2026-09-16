@@ -22,8 +22,10 @@ interface RawBlogData {
 
 @Injectable()
 export class BlogsQueryRepository {
-    constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType,
-                private readonly dataSource: DataSource,) {}
+    constructor(
+        @InjectModel(Blog.name) private BlogModel: BlogModelType,
+        private readonly dataSource: DataSource,
+    ) {}
 
     async getBlogName(sentBlogId: string) {
         return this.BlogModel.findOne({ _id: sentBlogId, deletedAt: null })
@@ -121,20 +123,19 @@ export class BlogsQueryRepository {
 
     async SQLgetAllBlogs(
         query: GetBlogsQueryParams,
-    ): Promise<PaginatedViewDto<BlogViewDto>> {
-
+    ): Promise<PaginatedViewDto<SQLBlogViewDto>> {
         const whereConditions: string[] = [`deleted_at IS NULL`];
         const orConditions: string[] = [];
         const queryParams: any[] = [];
         let indexParamCounter: number = 1;
 
-        if(query.searchNameTerm && query.searchNameTerm.trim() !== '') {
+        if (query.searchNameTerm && query.searchNameTerm.trim() !== '') {
             orConditions.push(`name ILIKE $${indexParamCounter}`);
             queryParams.push(`%${query.searchNameTerm}%`);
             indexParamCounter += 1;
         }
 
-        if(orConditions.length > 0) {
+        if (orConditions.length > 0) {
             whereConditions.push(`(${orConditions.join(' OR ')})`); // хоть тут и один параметр максимум, но на случай если их количество изменится все равно сделаю join
         }
 
@@ -149,7 +150,10 @@ export class BlogsQueryRepository {
         };
 
         const sortByColumn = auxSortingMapper[query.sortBy] || 'created_at';
-        const sortDirection = query.sortDirection && query.sortDirection.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+        const sortDirection =
+            query.sortDirection && query.sortDirection.toUpperCase() === 'ASC'
+                ? 'ASC'
+                : 'DESC';
 
         const offset = query.calculateSkip();
         const limit = query.pageSize;
@@ -166,7 +170,7 @@ export class BlogsQueryRepository {
             WHERE ${whereClause}
             ORDER BY ${sortByColumn} ${sortDirection}
             LIMIT $${indexParamCounter}
-            OFFSET $${indexParamCounter+1}
+            OFFSET $${indexParamCounter + 1}
         `;
 
         const countQuery = `
@@ -214,7 +218,6 @@ export class BlogsQueryRepository {
         return BlogViewDto.mapToView(blog);
     }
 
-
     async SQLgetBlogById(blogId: string): Promise<SQLBlogViewDto | null> {
         const query = `
             SELECT 
@@ -228,15 +231,16 @@ export class BlogsQueryRepository {
             WHERE id = $1 AND deleted_at IS NULL;
         `;
 
-        const [blogRow] = await this.dataSource.query<RawBlogData[]>(query, [blogId]);
+        const [blogRow] = await this.dataSource.query<RawBlogData[]>(query, [
+            blogId,
+        ]);
 
-        if(!blogRow) {
+        if (!blogRow) {
             return null;
         }
 
         return SQLBlogViewDto.mapFromDbRaw(blogRow);
     }
-
 
     async ifBlogExists(blogId: string): Promise<boolean> {
         const count = await this.BlogModel.countDocuments({
@@ -248,7 +252,6 @@ export class BlogsQueryRepository {
     }
 
     async SQLifBlogExists(blogId: string): Promise<boolean> {
-
         const query = ` 
             SELECT EXISTS (
                 SELECT 1
@@ -257,7 +260,10 @@ export class BlogsQueryRepository {
             ) as exists;
         `;
 
-        const [resultRow] = await this.dataSource.query<{exists: boolean}[]>(query, [blogId]);
+        const [resultRow] = await this.dataSource.query<{ exists: boolean }[]>(
+            query,
+            [blogId],
+        );
 
         // если вдруг по какой-то причине драйвер вернет пустой массив, тогда просто nest выдаст 500
         // Boolean(...): Гарантирует, что метод всегда вернет строго true или false (boolean), даже если СУБД вернет 1/0 или "true"/"false"

@@ -8,3 +8,7 @@ export type CreatePostDomainDto = CreatePostInputDto & {
     blogId: string;
     blogName: string;
 };
+
+export type SQLCreatePostDomainDto = CreatePostInputDto & {
+    blogId: string;
+};

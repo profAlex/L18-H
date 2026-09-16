@@ -3,10 +3,15 @@ import { BlogDocument } from '../../blogs/domain/blog.entity';
 import { Post, PostDocument, PostModelType } from '../domain/post.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { LikeStatus } from '../../../../core/enums/like-status.enum';
+import { SQLPost } from '../domain/sql-post.entitry';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PostsCommandRepository {
-    constructor(@InjectModel(Post.name) private PostModel: PostModelType) {}
+    constructor(
+        @InjectModel(Post.name) private PostModel: PostModelType,
+        private readonly dataSource: DataSource,
+    ) {}
 
     async save(post: PostDocument): Promise<void> {
         // эта часть только для тех случаев когда обновляем массив newestLikes в посте
@@ -17,6 +22,43 @@ export class PostsCommandRepository {
 
         // ну а та часть уже для всех
         await post.save();
+    }
+
+    async SQLsave(post: SQLPost): Promise<void> {
+        const query = `
+            INSERT INTO public.posts (id,
+                                      title,
+                                      short_description,
+                                      content,
+                                      blog_id,
+                                      likes_count,
+                                      dislikes_count,
+                                      created_at,
+                                      updated_at,
+                                      deleted_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ON CONFLICT (id) DO UPDATE SET title             = EXCLUDED.title,
+                                           short_description = EXCLUDED.short_description,
+                                           content           = EXCLUDED.content,
+                                           blog_id           = EXCLUDED.blog_id,
+                                           likes_count       = EXCLUDED.likes_count,
+                                           dislikes_count    = EXCLUDED.dislikes_count,
+                                           updated_at        = EXCLUDED.updated_at,
+                                           deleted_at        = EXCLUDED.deleted_at;
+        `;
+
+        await this.dataSource.query(query, [
+            post.id,
+            post.title,
+            post.shortDescription,
+            post.content,
+            post.blogId,
+            post.likesCount,
+            post.dislikesCount,
+            post.createdAt,
+            post.updatedAt,
+            post.deletedAt,
+        ]);
     }
 
     async findSinglePostById(sentPostId: string): Promise<PostDocument | null> {

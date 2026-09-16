@@ -82,7 +82,7 @@ export class BlogsController {
     @HttpCode(HttpStatus.OK)
     async getALlBlogs(
         @Query() query: GetBlogsQueryParams,
-    ): Promise<PaginatedViewDto<BlogViewDto>> {
+    ): Promise<PaginatedViewDto<SQLBlogViewDto>> {
 
         // тут все-таки не делать USEcase?
         // Query (Запросы) — только читают данные (SELECT). Их НЕ оборачивают в Use Cases,
