@@ -48,6 +48,7 @@ import { DeleteBlogByIdCommandHandler } from './blogs/application/usecases/delet
 import {
     DeletePostByBlogIdPostIdCommandHandler
 } from './blogs/application/usecases/delete-post-by-blog-id-post-id.usecase';
+import { SaBlogsController } from './blogs/api/sa-blogs.controller';
 
 //тут регистрируем провайдеры всех сущностей блоггерской платформы (blogs, posts, comments, etc...)
 @Module({
@@ -67,7 +68,7 @@ import {
 
         UserAccountsModule,
     ],
-    controllers: [BlogsController, PostsController, CommentsController],
+    controllers: [BlogsController, PostsController, CommentsController, SaBlogsController],
     providers: [
         DeletePostByBlogIdPostIdCommandHandler,
         DeleteBlogByIdCommandHandler,
