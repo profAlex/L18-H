@@ -166,7 +166,7 @@ export class SaBlogsController {
 
     // Delete post specified by user id and blog id
     @UseGuards(BasicAuthGuard)
-    @Put(':blogId/posts/:postId')
+    @Delete(':blogId/posts/:postId')
     @HttpCode(HttpStatus.NO_CONTENT)
     async deletePostByBlogIdAndPostId(
         @Param('blogId') blogId: string,
