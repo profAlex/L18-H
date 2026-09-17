@@ -5,6 +5,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { LikeStatus } from '../../../../core/enums/like-status.enum';
 import { SQLPost } from '../domain/sql-post.entitry';
 import { DataSource } from 'typeorm';
+import { PostQueryRawDto } from './query/posts.query-repository';
+
 
 @Injectable()
 export class PostsCommandRepository {
@@ -60,6 +62,37 @@ export class PostsCommandRepository {
             post.deletedAt,
         ]);
     }
+
+
+    async SQLfindSinglePostById({postId, blogId}:{ postId: string, blogId: string}): Promise<SQLPost | null> {
+
+        const findQuery = `
+            SELECT 
+                    p.id,
+                    p.title,
+                    p.short_description,
+                    p.content,
+                    p.blog_id,
+                    p.likes_count,
+                    p.dislikes_count,
+                    p.created_at,
+                    p.updated_at,
+                    p.deleted_at
+            FROM public.posts p
+            JOIN public.blogs b ON p.blog_id = b.id
+            WHERE p.id = $1 AND p.blog_id = $2 AND b.deleted_at IS NULL AND p.deleted_at IS NULL
+            LIMIT 1;
+        `;
+
+        const [resultRow] = await this.dataSource.query<PostQueryRawDto[]>(findQuery, [postId, blogId]);
+
+        if (!resultRow) {
+            return null;
+        }
+
+        return SQLPost.reconstructInstance(resultRow);
+    }
+
 
     async findSinglePostById(sentPostId: string): Promise<PostDocument | null> {
         return this.PostModel.findOne({

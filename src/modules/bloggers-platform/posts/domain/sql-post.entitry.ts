@@ -1,5 +1,5 @@
 import { CreatePostDomainDto, SQLCreatePostDomainDto } from './dto/create-post.domain.dto';
-import { UpdatePostInputDto } from '../dto/create-post-input.dto';
+import { SQLUpdatePostInputDto, UpdatePostInputDto } from '../dto/create-post-input.dto';
 
 export class SQLPost {
     id: string;
@@ -60,7 +60,7 @@ export class SQLPost {
         this.updatedAt = new Date();
     }
 
-    updatePost(dto: UpdatePostInputDto): void {
+    updatePost(dto: SQLUpdatePostInputDto): void {
         let isChanged = false;
 
         if (dto.title !== undefined && dto.title !== this.title) {
@@ -73,10 +73,6 @@ export class SQLPost {
         }
         if (dto.content !== undefined && dto.content !== this.content) {
             this.content = dto.content;
-            isChanged = true;
-        }
-        if (dto.blogId !== undefined && dto.blogId !== this.blogId) {
-            this.blogId = dto.blogId;
             isChanged = true;
         }
 

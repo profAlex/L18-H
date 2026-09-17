@@ -57,6 +57,31 @@ export class BlogsCommandRepository {
     //     return result.deletedCount === 1;
     // }
 
+    async SQLfindEntityById(id: string): Promise<SQLBlog | null> {
+        const query = `
+        SELECT 
+            id,
+            name,
+            description,
+            website_url,
+            is_membership,
+            created_at,
+            updated_at,
+            deleted_at
+        FROM public.blogs
+        WHERE id = $1 AND deleted_at IS NULL;
+    `;
+
+        const [raw] = await this.dataSource.query(query, [id]);
+
+        if (!raw) {
+            return null;
+        }
+
+        // восстанавливаем полноценный класс SQLBlog с методами
+        return SQLBlog.reconstructInstance(raw);
+    }
+
     async getBlogDocumentById(blogId: string): Promise<BlogDocument | null> {
         return this.BlogModel.findOne({_id: blogId, deletedAt: null});
     }

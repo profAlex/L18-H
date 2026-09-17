@@ -71,3 +71,33 @@ export class UpdatePostInputDto {
     @IsNotEmpty()
     blogId: string = '';
 }
+
+
+export class SQLUpdatePostInputDto {
+    @ApiProperty({ type: String, required: true })
+    @Transform(({ value }) =>
+        typeof value === 'string' ? value.trim() : value,
+    )
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(30)
+    title: string = '';
+
+    @ApiProperty({ type: String, required: true })
+    @Transform(({ value }) =>
+        typeof value === 'string' ? value.trim() : value,
+    )
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(100)
+    shortDescription: string = '';
+
+    @ApiProperty({ type: String, required: true })
+    @Transform(({ value }) =>
+        typeof value === 'string' ? value.trim() : value,
+    )
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(1000)
+    content: string = '';
+}

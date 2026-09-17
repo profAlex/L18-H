@@ -7,7 +7,7 @@ import {
 import { CreatePostDomainDto } from './dto/create-post.domain.dto';
 import { HydratedDocument, Model } from 'mongoose';
 import { LikeStatus } from '../../../../core/enums/like-status.enum';
-import { UpdatePostInputDto } from '../dto/create-post-input.dto';
+import { SQLUpdatePostInputDto, UpdatePostInputDto } from '../dto/create-post-input.dto';
 import { LatestLikeDetailViewDto } from '../dto/view-dto/latest-like-detail.view-dto';
 
 // post entity structure for reference:
@@ -126,7 +126,7 @@ export class Post {
     // "shortDescription": "string",
     // "content": "string",
     // "blogId": "string"
-    updatePost(dto: UpdatePostInputDto) {
+    updatePost(dto: SQLUpdatePostInputDto) {
         if (dto.title !== this.title) {
             this.title = dto.title;
         }
@@ -135,9 +135,6 @@ export class Post {
         }
         if (dto.content !== this.content) {
             this.content = dto.content;
-        }
-        if (dto.blogId !== this.blogId) {
-            this.blogId = dto.blogId;
         }
     }
 

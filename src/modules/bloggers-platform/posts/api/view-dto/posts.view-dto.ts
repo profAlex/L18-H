@@ -27,7 +27,7 @@
 import { LikeStatus } from '../../../../../core/enums/like-status.enum';
 import { Post } from '../../domain/post.entity';
 import { Types } from 'mongoose';
-import { likeInfoQueryRawDto, postQueryRawDto } from '../../infrastructure/query/posts.query-repository';
+import { likeInfoQueryRawDto, PostQueryRawDto } from '../../infrastructure/query/posts.query-repository';
 
 // export class PostViewDto {
 //     id: string;
@@ -149,7 +149,7 @@ export class PostViewDto {
     }
 
     static mapToViewFromFlatSQL(
-        post: postQueryRawDto,
+        post: PostQueryRawDto,
         likesInfoArray: likeInfoQueryRawDto[],
     ): PostViewDto {
             // Находим лайки только для текущего поста

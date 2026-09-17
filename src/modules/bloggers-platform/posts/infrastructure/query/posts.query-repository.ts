@@ -14,7 +14,7 @@ import { PostLikesQueryRepository } from '../../../likes/infrastructure/query/po
 import { LikeStatus } from '../../../../../core/enums/like-status.enum';
 import { DataSource } from 'typeorm';
 
-export interface postQueryRawDto {
+export interface PostQueryRawDto {
     id: string;
     title: string;
     shortDescription: string;
@@ -194,7 +194,7 @@ export class PostsQueryRepository {
         `;
 
         const [postRows, countResult] = await Promise.all([
-            this.dataSource.query<postQueryRawDto[]>(postInfoQuery, [
+            this.dataSource.query<PostQueryRawDto[]>(postInfoQuery, [
                 userId ?? null,
                 blogId,
                 limit,
@@ -367,7 +367,7 @@ export class PostsQueryRepository {
         `;
 
         const [postRows, countResult] = await Promise.all([
-            this.dataSource.query<postQueryRawDto[]>(postInfoQuery, [
+            this.dataSource.query<PostQueryRawDto[]>(postInfoQuery, [
                 sentUserId ?? null,
                 limit,
                 offset,
@@ -489,7 +489,7 @@ export class PostsQueryRepository {
             LIMIT 1;
         `;
 
-        const [postRow] = await this.dataSource.query<postQueryRawDto[]>(postQuery, [postId, userId ?? null]);
+        const [postRow] = await this.dataSource.query<PostQueryRawDto[]>(postQuery, [postId, userId ?? null]);
         if(!postRow){
             return null;
         }

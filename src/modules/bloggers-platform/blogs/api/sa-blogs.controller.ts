@@ -31,6 +31,13 @@ import { CreateBlogCommand } from '../application/usecases/create-blog.usecase';
 import { CreateBlogPostInputDto } from './input-dto/create-blog-post.input-dto';
 import { GetPostById } from '../../posts/application/usecases/get-post-by-id.usecase';
 import { CreatePostForBlogCommand } from '../application/usecases/create-post.usecase';
+import { UpdateBlogInputDto } from '../dto/create-blog.dto';
+import { UpdateBlogCommand, UpdateBlogHandler } from '../application/usecases/update-blog-by-id.usecase';
+import { SQLUpdatePostInputDto, UpdatePostInputDto } from '../../posts/dto/create-post-input.dto';
+import { UpdatePostById } from '../../posts/application/usecases/update-post-by-id.usecase';
+import {
+    UpdatePostByBlogIdPostIdCommand,
+} from '../application/usecases/update-post-by-blog-id-post-id.usecase';
 
 @ApiTags('SA Blogs endpoint')
 @Controller('sa/blogs')
@@ -76,6 +83,20 @@ export class SaBlogsController {
     }
 
 
+    // Update existing Blog by id with InputModel
+    @UseGuards(BasicAuthGuard)
+    @Put(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updateBlogById(
+        @Param('id') id: string,
+        @Body() body: UpdateBlogInputDto,
+    ): Promise<void> {
+        return this.commandBus.execute<void>(
+            new UpdateBlogCommand(id, body)
+        );
+    }
+
+
     // Create new post for specific blog
     @UseGuards(BasicAuthGuard)
     @Post(':blogId/posts')
@@ -109,6 +130,22 @@ export class SaBlogsController {
     ): Promise<PaginatedViewDto<PostViewDto>> {
         return this.queryBus.execute<PaginatedViewDto<PostViewDto>>(
             new GetPostsByBlogIdQuery(blogId, query, user?.userId),
+        );
+    }
+
+
+    // Update existing post by id with InputModel
+    @UseGuards(BasicAuthGuard)
+    @Put(':blogId/posts/:postId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async updatePostById(
+        @Param('blogId') blogId: string,
+        @Param('postId') postId: string,
+
+        @Body() body: SQLUpdatePostInputDto,
+    ): Promise<void> {
+        return this.commandBus.execute<void>(
+            new UpdatePostByBlogIdPostIdCommand(blogId, postId, body),
         );
     }
 }

@@ -40,7 +40,10 @@ import { PostLikesQueryRepository } from './likes/infrastructure/query/post-like
 import { User, UserSchema } from '../user-accounts/domain/user.entity';
 import { GetPostsByBlogIdQuery } from './blogs/application/usecases/get-posts-by-blog-id.usecase';
 import { GetBlogByIdQuery } from './blogs/application/usecases/get-blog-by-id.usecase';
-import { CreateBlogCommand } from './blogs/application/usecases/create-blog.usecase';
+import { CreateBlogCommand, CreateBlogCommandHandler } from './blogs/application/usecases/create-blog.usecase';
+import { UpdateBlogHandler } from './blogs/application/usecases/update-blog-by-id.usecase';
+import { CreatePostForBlogHandler } from './blogs/application/usecases/create-post.usecase';
+import { UpdatePostByBlogIdPostIdHandler } from './blogs/application/usecases/update-post-by-blog-id-post-id.usecase';
 
 //тут регистрируем провайдеры всех сущностей блоггерской платформы (blogs, posts, comments, etc...)
 @Module({
@@ -62,7 +65,10 @@ import { CreateBlogCommand } from './blogs/application/usecases/create-blog.usec
     ],
     controllers: [BlogsController, PostsController, CommentsController],
     providers: [
-        CreateBlogCommand,
+        UpdatePostByBlogIdPostIdHandler,
+        UpdateBlogHandler,
+        CreatePostForBlogHandler,
+        CreateBlogCommandHandler,
         GetBlogByIdQuery,
         GetPostsByBlogIdQuery,
         ChangeCommentLikeStatusHandler,

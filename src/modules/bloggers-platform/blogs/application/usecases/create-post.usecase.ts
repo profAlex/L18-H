@@ -16,7 +16,7 @@ export class CreatePostForBlogCommand extends Command<string> {
 }
 
 @CommandHandler(CreatePostForBlogCommand)
-export class CreatePostForBlogUseCase implements ICommandHandler<
+export class CreatePostForBlogHandler implements ICommandHandler<
     CreatePostForBlogCommand> {
     constructor(
         private readonly blogsQueryRepository: BlogsQueryRepository,
