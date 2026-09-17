@@ -37,6 +37,6 @@ export class UpdateBlogHandler implements ICommandHandler<UpdateBlogCommand>
         blog.updateBlog(dto);
 
         // 3. Сохраняем измененную сущность обратно в БД
-        await this.blogsCommandRepository.SQLsave(blog);
+        await this.blogsCommandRepository.SQLsaveUpdate(blog);
     }
 }

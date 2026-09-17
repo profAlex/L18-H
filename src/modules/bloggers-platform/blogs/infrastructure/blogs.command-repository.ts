@@ -52,6 +52,51 @@ export class BlogsCommandRepository {
         await this.dataSource.query(query, queryParams);
     }
 
+    async SQLsaveCreate(blog: Omit<SQLBlog, 'id'>): Promise<string> {
+        const query = `
+        INSERT INTO blogs (name, description, website_url, is_membership, created_at, updated_at, deleted_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id;
+    `;
+        const queryParams = [
+            blog.name,
+            blog.description,
+            blog.websiteUrl,
+            blog.isMembership,
+            blog.createdAt,
+            blog.updatedAt,
+            blog.deletedAt,
+        ];
+
+        const result = await this.dataSource.query(query, queryParams);
+        return result[0].id;
+    }
+
+
+    async SQLsaveUpdate(blog: SQLBlog): Promise<void> {
+        const query = `
+        UPDATE blogs
+        SET name = $2,
+            description = $3,
+            website_url = $4,
+            is_membership = $5,
+            updated_at = $6,
+            deleted_at = $7
+        WHERE id = $1;
+    `;
+        const queryParams = [
+            blog.id,
+            blog.name,
+            blog.description,
+            blog.websiteUrl,
+            blog.isMembership,
+            blog.updatedAt,
+            blog.deletedAt,
+        ];
+
+        await this.dataSource.query(query, queryParams);
+    }
+
     // async delete(blogId: string): Promise<boolean> {
     //     const result = await this.BlogModel.deleteOne({ _id: blogId });
     //     return result.deletedCount === 1;

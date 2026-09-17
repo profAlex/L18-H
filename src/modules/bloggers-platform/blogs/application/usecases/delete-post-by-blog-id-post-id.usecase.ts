@@ -30,6 +30,6 @@ export class DeletePostByBlogIdPostIdCommandHandler implements ICommandHandler<D
         }
 
         post.makeDeleted();
-        await this.postsCommandRepository.SQLsave(post);
+        await this.postsCommandRepository.SQLsaveUpdate(post);
     }
 }

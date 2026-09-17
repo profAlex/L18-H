@@ -43,7 +43,7 @@ export class CreatePostForBlogHandler implements ICommandHandler<
         });
 
         // 3. Сохраняем в БД
-        await this.postsCommandRepository.SQLsave(post);
+        await this.postsCommandRepository.SQLsaveCreate(post);
 
         // 4. Возвращаем только ID
         return post.id;

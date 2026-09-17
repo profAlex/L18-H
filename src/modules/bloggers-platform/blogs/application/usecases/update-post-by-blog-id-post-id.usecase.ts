@@ -31,6 +31,6 @@ export class UpdatePostByBlogIdPostIdHandler implements ICommandHandler<UpdatePo
         }
 
         post.updatePost(updateInputData);
-        await this.postsCommandRepository.SQLsave(post);
+        await this.postsCommandRepository.SQLsaveUpdate(post);
     }
 }

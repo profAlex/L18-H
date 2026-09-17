@@ -64,6 +64,68 @@ export class PostsCommandRepository {
     }
 
 
+    async SQLsaveCreate(post: Omit<SQLPost, 'id'>): Promise<string> {
+        const query = `
+        INSERT INTO public.posts (
+            title,
+            short_description,
+            content,
+            blog_id,
+            likes_count,
+            dislikes_count,
+            created_at,
+            updated_at,
+            deleted_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id;
+    `;
+
+        const queryParams = [
+            post.title,
+            post.shortDescription,
+            post.content,
+            post.blogId,
+            post.likesCount,
+            post.dislikesCount,
+            post.createdAt,
+            post.updatedAt,
+            post.deletedAt,
+        ];
+
+        const result = await this.dataSource.query(query, queryParams);
+        return result[0].id;
+    }
+
+
+    async SQLsaveUpdate(post: SQLPost): Promise<void> {
+        const query = `
+        UPDATE public.posts
+        SET title = $2,
+            short_description = $3,
+            content = $4,
+            likes_count = $5,
+            dislikes_count = $6,
+            updated_at = $7,
+            deleted_at = $8
+        WHERE id = $1;
+    `;
+
+        const queryParams = [
+            post.id,
+            post.title,
+            post.shortDescription,
+            post.content,
+            post.likesCount,
+            post.dislikesCount,
+            post.updatedAt,
+            post.deletedAt,
+        ];
+
+        await this.dataSource.query(query, queryParams);
+    }
+
+
     async SQLfindSinglePostById({postId, blogId}:{ postId: string, blogId: string}): Promise<SQLPost | null> {
 
         const findQuery = `
