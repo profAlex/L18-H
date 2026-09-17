@@ -44,6 +44,10 @@ import { CreateBlogCommand, CreateBlogCommandHandler } from './blogs/application
 import { UpdateBlogHandler } from './blogs/application/usecases/update-blog-by-id.usecase';
 import { CreatePostForBlogHandler } from './blogs/application/usecases/create-post.usecase';
 import { UpdatePostByBlogIdPostIdHandler } from './blogs/application/usecases/update-post-by-blog-id-post-id.usecase';
+import { DeleteBlogByIdCommandHandler } from './blogs/application/usecases/delete-blog-by-id.usecase';
+import {
+    DeletePostByBlogIdPostIdCommandHandler
+} from './blogs/application/usecases/delete-post-by-blog-id-post-id.usecase';
 
 //тут регистрируем провайдеры всех сущностей блоггерской платформы (blogs, posts, comments, etc...)
 @Module({
@@ -65,6 +69,8 @@ import { UpdatePostByBlogIdPostIdHandler } from './blogs/application/usecases/up
     ],
     controllers: [BlogsController, PostsController, CommentsController],
     providers: [
+        DeletePostByBlogIdPostIdCommandHandler,
+        DeleteBlogByIdCommandHandler,
         UpdatePostByBlogIdPostIdHandler,
         UpdateBlogHandler,
         CreatePostForBlogHandler,

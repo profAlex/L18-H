@@ -38,6 +38,8 @@ import { UpdatePostById } from '../../posts/application/usecases/update-post-by-
 import {
     UpdatePostByBlogIdPostIdCommand,
 } from '../application/usecases/update-post-by-blog-id-post-id.usecase';
+import { DeleteBlogByIdCommand } from '../application/usecases/delete-blog-by-id.usecase';
+import { DeletePostByBlogIdPostIdCommand } from '../application/usecases/delete-post-by-blog-id-post-id.usecase';
 
 @ApiTags('SA Blogs endpoint')
 @Controller('sa/blogs')
@@ -65,6 +67,7 @@ export class SaBlogsController {
 
         return this.blogsQueryRepository.SQLgetAllBlogs(query);
     }
+
 
     // Create new blog
     @UseGuards(BasicAuthGuard)
@@ -97,6 +100,18 @@ export class SaBlogsController {
     }
 
 
+    // Delete blog specified by id
+    @UseGuards(BasicAuthGuard)
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteBlogById(@Param('id') id: string): Promise<void> {
+        // return this.blogsService.deleteBlogById(id);
+        return this.commandBus.execute<void>(
+            new DeleteBlogByIdCommand(id)
+        );
+    }
+
+
     // Create new post for specific blog
     @UseGuards(BasicAuthGuard)
     @Post(':blogId/posts')
@@ -117,8 +132,6 @@ export class SaBlogsController {
     }
 
 
-
-
     // Returns all posts for specified blog
     @UseGuards(BasicAuthGuard)
     @Get(':blogId/posts')
@@ -134,18 +147,31 @@ export class SaBlogsController {
     }
 
 
-    // Update existing post by id with InputModel
+    // Update existing post by user id and blog id with SQLUpdatePostInputDto
     @UseGuards(BasicAuthGuard)
     @Put(':blogId/posts/:postId')
     @HttpCode(HttpStatus.NO_CONTENT)
-    async updatePostById(
+    async updatePostByBlogIdAndPostId(
         @Param('blogId') blogId: string,
         @Param('postId') postId: string,
-
         @Body() body: SQLUpdatePostInputDto,
     ): Promise<void> {
         return this.commandBus.execute<void>(
             new UpdatePostByBlogIdPostIdCommand(blogId, postId, body),
+        );
+    }
+
+
+    // Delete post specified by user id and blog id
+    @UseGuards(BasicAuthGuard)
+    @Put(':blogId/posts/:postId')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deletePostByBlogIdAndPostId(
+        @Param('blogId') blogId: string,
+        @Param('postId') postId: string,
+    ): Promise<void> {
+        return this.commandBus.execute<void>(
+            new DeletePostByBlogIdPostIdCommand(blogId, postId),
         );
     }
 }

@@ -180,7 +180,7 @@ export class PostsQueryRepository {
             FROM public.posts p
                      LEFT JOIN public.blogs b ON p.blog_id = b.id
                      LEFT JOIN public.post_likes l ON l.post_id = p.id AND l.user_id = $1
-            WHERE p.deleted_at IS NULL
+            WHERE p.deleted_at IS NULL AND b.deleted_at IS NULL
               AND p.blog_id = $2
             ORDER BY ${sortingClause} ${directionClause}
             LIMIT $3 OFFSET $4;
@@ -353,7 +353,7 @@ export class PostsQueryRepository {
             FROM public.posts p
                      LEFT JOIN public.blogs b ON p.blog_id = b.id
                      LEFT JOIN public.post_likes l ON l.post_id = p.id AND l.user_id = $1
-            WHERE p.deleted_at IS NULL
+            WHERE p.deleted_at IS NULL AND b.deleted_at IS NULL
             ORDER BY ${sortingClause} ${directionClause}
             LIMIT $2 OFFSET $3;
         `;

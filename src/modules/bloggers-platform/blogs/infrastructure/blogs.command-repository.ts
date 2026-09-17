@@ -57,7 +57,7 @@ export class BlogsCommandRepository {
     //     return result.deletedCount === 1;
     // }
 
-    async SQLfindEntityById(id: string): Promise<SQLBlog | null> {
+    async SQLfindBlogById(id: string): Promise<SQLBlog | null> {
         const query = `
         SELECT 
             id,
