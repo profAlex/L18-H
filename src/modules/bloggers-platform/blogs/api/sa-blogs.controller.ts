@@ -80,6 +80,8 @@ export class SaBlogsController {
             new CreateBlogCommand(body),
         );
 
+        // console.log("blogId received:", blogId);
+
         return this.queryBus.execute<SQLBlogViewDto>(
             new GetBlogByIdQuery(blogId),
         );
@@ -120,12 +122,12 @@ export class SaBlogsController {
         @Param('blogId') blogId: string,
         @Body() body: CreateBlogPostInputDto,
     ): Promise<PostViewDto> {
-        // 1. Вызываем команду создания поста и получаем его ID
+        // создаем пост получаем его ID
         const postId = await this.commandBus.execute<string>(
             new CreatePostForBlogCommand(blogId, body),
         );
 
-        // 2. Вызываем query-хэндлер для получения готового PostViewDto
+        // вызываем query-хэндлер для получения готового PostViewDto
         return this.queryBus.execute<PostViewDto>(
             new GetPostById(postId, undefined),
         );

@@ -27,7 +27,7 @@ export class SQLPost {
         newPost.dislikesCount = 0;
         newPost.createdAt = new Date();
         newPost.updatedAt = new Date();
-        newPost.deletedAt = null;
+        newPost.deletedAt = null; // Строго null
 
         return newPost;
     }
@@ -45,8 +45,11 @@ export class SQLPost {
         post.blogId = raw.blog_id;
         post.likesCount = Number(raw.likes_count ?? raw.likesCount ?? 0);
         post.dislikesCount = Number(raw.dislikes_count ?? raw.dislikesCount ?? 0);
-        post.createdAt = new Date(raw.created_at);
-        post.updatedAt = new Date(raw.updated_at);
+
+        // Валидация дат
+        post.createdAt = raw.created_at ? new Date(raw.created_at) : new Date();
+        post.updatedAt = raw.updated_at ? new Date(raw.updated_at) : new Date();
+        // Защита от new Date(null) -> 1970 год
         post.deletedAt = raw.deleted_at ? new Date(raw.deleted_at) : null;
 
         return post;

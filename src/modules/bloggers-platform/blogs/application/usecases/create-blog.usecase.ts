@@ -28,8 +28,6 @@ export class CreateBlogCommandHandler implements ICommandHandler<CreateBlogComma
     async execute(command: CreateBlogCommand): Promise<string> {
         const { name, description, websiteUrl } = command.blogInputDto;
 
-        console.log("before createInstance");
-
         // создаем чистую доменную сущность (без Mongoose и без DI)
         const newBlog = SQLBlog.createInstance({
             name,
@@ -37,11 +35,9 @@ export class CreateBlogCommandHandler implements ICommandHandler<CreateBlogComma
             websiteUrl
         });
 
-        console.log("before save");
         // сохраняем в PostgreSQL через Command-репозиторий
-        await this.blogsCommandRepository.SQLsaveCreate(newBlog);
+        const createdBlogId = await this.blogsCommandRepository.SQLsaveCreate(newBlog);
 
-        console.log("after save");
-        return newBlog.id;
+        return createdBlogId;
     }
 }

@@ -219,6 +219,8 @@ export class BlogsQueryRepository {
     }
 
     async SQLgetBlogById(blogId: string): Promise<SQLBlogViewDto | null> {
+
+        console.log()
         const query = `
             SELECT 
                 id,

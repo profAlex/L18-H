@@ -32,10 +32,11 @@ export class SQLBlog {
         blog.id = raw.id;
         blog.name = raw.name;
         blog.description = raw.description;
-        blog.websiteUrl = raw.website_url; // Маппинг snake_case из SQL в camelCase
+        blog.websiteUrl = raw.website_url;
         blog.isMembership = raw.is_membership;
-        blog.createdAt = new Date(raw.created_at);
-        blog.updatedAt = new Date(raw.updated_at);
+        blog.createdAt = raw.created_at ? new Date(raw.created_at) : new Date();
+        blog.updatedAt = raw.updated_at ? new Date(raw.updated_at) : new Date();
+
         blog.deletedAt = raw.deleted_at ? new Date(raw.deleted_at) : null;
 
         return blog;

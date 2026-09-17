@@ -38,8 +38,11 @@ import { CommentLikesQueryRepository } from './likes/infrastructure/query/commen
 import { PostLikesCommandRepository } from './likes/infrastructure/post-likes.command-repostory';
 import { PostLikesQueryRepository } from './likes/infrastructure/query/post-likes.query-repository';
 import { User, UserSchema } from '../user-accounts/domain/user.entity';
-import { GetPostsByBlogIdQuery } from './blogs/application/usecases/get-posts-by-blog-id.usecase';
-import { GetBlogByIdQuery } from './blogs/application/usecases/get-blog-by-id.usecase';
+import {
+    GetPostsByBlogIdQuery,
+    GetPostsByBlogIdQueryHandler,
+} from './blogs/application/usecases/get-posts-by-blog-id.usecase';
+import { GetBlogByIdQuery, GetBlogByIdQueryHandler } from './blogs/application/usecases/get-blog-by-id.usecase';
 import { CreateBlogCommand, CreateBlogCommandHandler } from './blogs/application/usecases/create-blog.usecase';
 import { UpdateBlogHandler } from './blogs/application/usecases/update-blog-by-id.usecase';
 import { CreatePostForBlogHandler } from './blogs/application/usecases/create-post.usecase';
@@ -76,9 +79,9 @@ import { SaBlogsController } from './blogs/api/sa-blogs.controller';
         UpdateBlogHandler,
         CreatePostForBlogHandler,
         CreateBlogCommandHandler,
-        GetBlogByIdQuery,
-        GetPostsByBlogIdQuery,
+        GetBlogByIdQueryHandler,
         ChangeCommentLikeStatusHandler,
+        GetPostsByBlogIdQueryHandler,
         DeleteCommentByIdHandler,
         UpdateCommentByIdHandler,
         CreateNewCommentHandler,

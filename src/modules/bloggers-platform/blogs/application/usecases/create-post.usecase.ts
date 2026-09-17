@@ -26,7 +26,7 @@ export class CreatePostForBlogHandler implements ICommandHandler<
     async execute(command: CreatePostForBlogCommand): Promise<string> {
         const { blogId, body } = command;
 
-        // 1. Проверяем существование блога
+        // проверяем существование блога
         const isBlogExist =
             await this.blogsQueryRepository.SQLifBlogExists(blogId);
         if (!isBlogExist) {
@@ -36,16 +36,16 @@ export class CreatePostForBlogHandler implements ICommandHandler<
             });
         }
 
-        // 2. Создаем доменную сущность поста
+        // создаем доменную сущность поста
         const post = SQLPost.createInstance({
             ...body,
             blogId,
         });
 
-        // 3. Сохраняем в БД
-        await this.postsCommandRepository.SQLsaveCreate(post);
+        // сохраняем в БД
+        const createdPostId = await this.postsCommandRepository.SQLsaveCreate(post);
 
-        // 4. Возвращаем только ID
-        return post.id;
+        // возвращаем только ID
+        return createdPostId;
     }
 }

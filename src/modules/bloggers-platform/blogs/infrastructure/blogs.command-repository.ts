@@ -52,20 +52,28 @@ export class BlogsCommandRepository {
         await this.dataSource.query(query, queryParams);
     }
 
-    async SQLsaveCreate(blog: Omit<SQLBlog, 'id'>): Promise<string> {
+    async SQLsaveCreate(blog: SQLBlog): Promise<string> {
+        // console.log('DEBUG BLOG DATES:', {
+        //     createdAt: blog.createdAt,
+        //     createdAtType: typeof blog.createdAt,
+        //     updatedAt: blog.updatedAt,
+        //     updatedAtType: typeof blog.updatedAt,
+        //     deletedAt: blog.deletedAt,
+        // });
+
         const query = `
-        INSERT INTO blogs (name, description, website_url, is_membership, created_at, updated_at, deleted_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id;
-    `;
+            INSERT INTO blogs (name, description, website_url, is_membership, created_at, updated_at, deleted_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id;
+        `;
         const queryParams = [
             blog.name,
             blog.description,
             blog.websiteUrl,
-            blog.isMembership,
-            blog.createdAt,
-            blog.updatedAt,
-            blog.deletedAt,
+            blog.isMembership ?? false,
+            blog.createdAt ? new Date(blog.createdAt) : new Date(),
+            blog.updatedAt ? new Date(blog.updatedAt) : new Date(),
+            blog.deletedAt ? new Date(blog.deletedAt) : null, // Защита от undefined
         ];
 
         const result = await this.dataSource.query(query, queryParams);

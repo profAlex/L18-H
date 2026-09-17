@@ -100,36 +100,40 @@ export class SQLBlogViewDto {
         this.name = blog.name;
         this.description = blog.description;
         this.websiteUrl = blog.websiteUrl;
-        this.createdAt =
-            blog.createdAt instanceof Date
-                ? blog.createdAt.toISOString()
-                : new Date(blog.createdAt).toISOString();
-        // if (
-        //     blog.createdAt instanceof Date &&
-        //     !isNaN(blog.createdAt.getTime())
-        // ) {
-        //     this.createdAt = blog.createdAt.toISOString();
-        // } else {
-        //     // Если прилетела строка, пробуем её распарсить
-        //     const parsedDate = new Date(blog.createdAt);
-        //     this.createdAt = !isNaN(parsedDate.getTime())
-        //         ? parsedDate.toISOString()
-        //         : new Date().toISOString(); // <-- Спасительный парашют: если дата битая/undefined, берем текущую
-        // }
+        this.createdAt = SQLBlogViewDto.toSafeIsoString(blog.createdAt);
         this.isMembership = blog.isMembership;
     }
 
+    /**
+     * Безопасное приведение даты к ISO-строке без падения приложения
+     */
+    private static toSafeIsoString(val: any): string {
+        if (val instanceof Date && !isNaN(val.getTime())) {
+            return val.toISOString();
+        }
+        if (val) {
+            const parsed = new Date(val);
+            if (!isNaN(parsed.getTime())) {
+                return parsed.toISOString();
+            }
+        }
+        // Защита: если дата null/undefined или кривая строка
+        return new Date().toISOString();
+    }
+
+    /**
+     * Маппинг из сырой SQL-строки (PostgreSQL snake_case)
+     */
     static mapFromDbRaw(raw: SQLRawBlogData): SQLBlogViewDto {
-        const dto = new SQLBlogViewDto({} as SQLBlog); // Обходим конструктор или заполняем напрямую
+        // Создаем пустой объект БЕЗ вызова constructor(blog)
+        const dto = Object.create(SQLBlogViewDto.prototype) as SQLBlogViewDto;
+
         dto.id = raw.id;
         dto.name = raw.name;
         dto.description = raw.description;
-        dto.websiteUrl = raw.website_url; // Маппинг из snake_case
-        dto.createdAt =
-            raw.created_at instanceof Date
-                ? raw.created_at.toISOString()
-                : new Date(raw.created_at).toISOString();
-        dto.isMembership = raw.is_membership; // Маппинг из snake_case
+        dto.websiteUrl = raw.website_url; // snake_case -> camelCase
+        dto.createdAt = SQLBlogViewDto.toSafeIsoString(raw.created_at);
+        dto.isMembership = raw.is_membership; // snake_case -> camelCase
 
         return dto;
     }
